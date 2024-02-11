@@ -117,8 +117,8 @@ thing. If you run multiple processes, you can change
 ;; Internal variables.
 ;;
 
-(defvar inferior-plisp--emacs-as-editor-p nil
-  "If non-nil, use `eedit.l' instead of `edit.l'.")
+;; (defvar inferior-plisp--emacs-as-editor-p nil
+;;   "If non-nil, use `eedit.l' instead of `edit.l'.")
 
 (defvar inferior-plisp--previous-load nil
   "Caches the last (directory . file) pair used by `inferior-plisp-load-file'.
@@ -130,64 +130,64 @@ Used for determining the default in the next call to that function.")
 ;; Internal functions.
 ;;
 
-(defun inferior-plisp--disable-line-editor ()
-  "Disable inbuilt PicoLisp line-editor.
+;; (defun inferior-plisp--disable-line-editor ()
+;;   "Disable inbuilt PicoLisp line-editor.
 
-The line-editor is not needed when PicoLisp is run as an Emacs subprocess."
-  (let ((pil-tmp-dir (expand-file-name "~/.pil/")))
-    ;; renaming of existing editor file
-    (cond
-     ;; abnormal condition, something went wrong before
-     ((and
-       (member "editor" (directory-files pil-tmp-dir))
-       (member "editor-orig" (directory-files pil-tmp-dir)))
-      (let ((ed-size
-             (nth
-              7
-              (file-attributes
-               (expand-file-name "editor" pil-tmp-dir))))
-            (ed-orig-size
-             (nth
-              7
-              (file-attributes
-               (expand-file-name "editor-orig"  pil-tmp-dir)))))
-        (if (or (= ed-size 0)
-                (<= ed-size ed-orig-size))
-            (delete-file
-             (expand-file-name "editor" pil-tmp-dir))
-          (rename-file
-           (expand-file-name "editor" pil-tmp-dir)
-           (expand-file-name "editor-orig" pil-tmp-dir)
-           'OK-IF-ALREADY-EXISTS))))
-     ;; normal condition, only editor file exists
-     ((member "editor" (directory-files pil-tmp-dir ))
-      (rename-file
-       (expand-file-name "editor" pil-tmp-dir)
-       (expand-file-name "editor-orig" pil-tmp-dir))))
-    ;; after renaming, create new empty editor file
-    (with-current-buffer
-        (find-file-noselect
-         (expand-file-name "editor" pil-tmp-dir))
-      (erase-buffer)
-      (save-buffer)
-      (kill-buffer))))
+;; The line-editor is not needed when PicoLisp is run as an Emacs subprocess."
+;;   (let ((pil-tmp-dir (expand-file-name "~/.pil/")))
+;;     ;; renaming of existing editor file
+;;     (cond
+;;      ;; abnormal condition, something went wrong before
+;;      ((and
+;;        (member "editor" (directory-files pil-tmp-dir))
+;;        (member "editor-orig" (directory-files pil-tmp-dir)))
+;;       (let ((ed-size
+;;              (nth
+;;               7
+;;               (file-attributes
+;;                (expand-file-name "editor" pil-tmp-dir))))
+;;             (ed-orig-size
+;;              (nth
+;;               7
+;;               (file-attributes
+;;                (expand-file-name "editor-orig"  pil-tmp-dir)))))
+;;         (if (or (= ed-size 0)
+;;                 (<= ed-size ed-orig-size))
+;;             (delete-file
+;;              (expand-file-name "editor" pil-tmp-dir))
+;;           (rename-file
+;;            (expand-file-name "editor" pil-tmp-dir)
+;;            (expand-file-name "editor-orig" pil-tmp-dir)
+;;            'OK-IF-ALREADY-EXISTS))))
+;;      ;; normal condition, only editor file exists
+;;      ((member "editor" (directory-files pil-tmp-dir ))
+;;       (rename-file
+;;        (expand-file-name "editor" pil-tmp-dir)
+;;        (expand-file-name "editor-orig" pil-tmp-dir))))
+;;     ;; after renaming, create new empty editor file
+;;     (with-current-buffer
+;;         (find-file-noselect
+;;          (expand-file-name "editor" pil-tmp-dir))
+;;       (erase-buffer)
+;;       (save-buffer)
+;;       (kill-buffer))))
 
-(defun inferior-plisp--get-editor-info ()
-  "Find out if Emacs is used as editor."
-  (let* ((editor-file (expand-file-name "editor" "~/.pil/"))
-         (editor-orig-file (expand-file-name "editor-orig" "~/.pil/"))
-         (ed-file
-          (cond
-           ((file-exists-p editor-file) editor-file)
-           ((file-exists-p editor-orig-file) editor-orig-file)
-           (t nil))))
-    (when ed-file
-      (with-current-buffer (find-file-noselect ed-file)
-        (goto-char (point-min))
-        (if (re-search-forward "eedit" nil 'NOERROR)
-            (setq inferior-plisp--emacs-as-editor-p t)
-          (setq inferior-plisp--emacs-as-editor-p nil))
-        (kill-buffer)))))
+;; (defun inferior-plisp--get-editor-info ()
+;;   "Find out if Emacs is used as editor."
+;;   (let* ((editor-file (expand-file-name "editor" "~/.pil/"))
+;;          (editor-orig-file (expand-file-name "editor-orig" "~/.pil/"))
+;;          (ed-file
+;;           (cond
+;;            ((file-exists-p editor-file) editor-file)
+;;            ((file-exists-p editor-orig-file) editor-orig-file)
+;;            (t nil))))
+;;     (when ed-file
+;;       (with-current-buffer (find-file-noselect ed-file)
+;;         (goto-char (point-min))
+;;         (if (re-search-forward "eedit" nil 'NOERROR)
+;;             (setq inferior-plisp--emacs-as-editor-p t)
+;;           (setq inferior-plisp--emacs-as-editor-p nil))
+;;         (kill-buffer)))))
 
 (defun inferior-plisp--get-old-input ()
   "Snarf the sexp ending at point."
@@ -214,20 +214,18 @@ See variable `inferior-plisp-picolisp-buffer'."
          inferior-plisp-picolisp-buffer))
       (error "No current process. See `inferior-plisp-picolisp-buffer'")))
 
-(defun inferior-plisp--reset-line-editor ()
-  "Reset inbuilt PicoLisp line-editor to original state."
-  (let ((pil-tmp-dir (expand-file-name "~/.pil/")))
-    (if (member "editor-orig" (directory-files pil-tmp-dir))
-        (rename-file
-         (expand-file-name "editor-orig" pil-tmp-dir)
-         (expand-file-name "editor" pil-tmp-dir)
-         'OK-IF-ALREADY-EXISTS)
-      (delete-file
-       (expand-file-name "editor" pil-tmp-dir)))))
+;; (defun inferior-plisp--reset-line-editor ()
+;;   "Reset inbuilt PicoLisp line-editor to original state."
+;;   (let ((pil-tmp-dir (expand-file-name "~/.pil/")))
+;;     (if (member "editor-orig" (directory-files pil-tmp-dir))
+;;         (rename-file
+;;          (expand-file-name "editor-orig" pil-tmp-dir)
+;;          (expand-file-name "editor" pil-tmp-dir)
+;;          'OK-IF-ALREADY-EXISTS)
+;;       (delete-file
+;;        (expand-file-name "editor" pil-tmp-dir)))))
 
 
-;;
-;; User-facing functions.
 ;;
 
 (defun inferior-plisp-interactively-start-process (&optional cmd)
@@ -274,8 +272,8 @@ is run)."
   (message "Using `run-picolisp' from `inferior-plisp'.")
   (when (not (comint-check-proc "*picolisp*"))
     (let ((cmdlist (split-string cmd)))
-      (inferior-plisp--get-editor-info)
-      (inferior-plisp--disable-line-editor)
+      ;; (inferior-plisp--get-editor-info)
+      ;; (inferior-plisp--disable-line-editor)
       (set-buffer
        (apply 'make-comint
               "picolisp"
@@ -288,10 +286,11 @@ is run)."
                (lambda (--arg)
                  (replace-regexp-in-string
                   "_XXX_" " " --arg))
-               (if inferior-plisp--emacs-as-editor-p
-                   (cons "@lib/eedit.l" (cdr cmdlist))
-                 (cons "@lib/edit.l" (cdr cmdlist))))))
-      (inferior-plisp--reset-line-editor)
+               ;; (if inferior-plisp--emacs-as-editor-p
+               ;;     (cons "@lib/eedit.l" (cdr cmdlist))
+               ;;   (cons "@lib/edit.l" (cdr cmdlist)))
+                 (cdr cmdlist))))
+      ;; (inferior-plisp--reset-line-editor)
       (inferior-plisp-mode)))
   (setq inferior-plisp-command-line cmd)
   (setq inferior-plisp-picolisp-buffer "*picolisp*")
